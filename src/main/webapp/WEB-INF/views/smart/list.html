@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <title>List Smartphone</title>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+    <script type="text/javascript">
+        function getSmartphone(smartphone) {
+            return  `<tr><td>${smartphone.producer}</td>
+            <td>${smartphone.model}</td>
+            <td>${smartphone.price}</td>` +
+                `<td><button type="submit" value="${smartphone.id}" onclick="deletePhone(this)">Delete</button></td>` +
+                `<td><button type="submit" value="${smartphone.id}" onclick="editPhone(this)">Edit</button></td></tr>`
+        }
+        function successHandler() {
+            $.ajax({
+                type: "GET",
+                url: "/smartphones",
+                success: function (data) {
+                    let content = '    <tr>\n' +
+                        '        <td>Producer</td>\n' +
+                        '        <td>Model</td>\n' +
+                        '        <td>Price</td>\n' +
+                        '        <td>Delete</td>\n' +
+                        '        <td>Edit</td>\n' +
+                        '    </tr>';
+                    for (let i = 0; i < data.length; i++) {
+                        content += getSmartphone(data[i]);
+                    }
+                    document.getElementById('smartphoneList').innerHTML = content;
+                }
+            })
+        }
+        function addNewPhone() {
+            let producer = $('#producer').val();
+            let model = $('#model').val();
+            let price = $('#price').val();
+            let newPhone = {
+                producer : producer,
+                model : model,
+                price : price
+            };
+            $.ajax({
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                type: "POST",
+                data: JSON.stringify(newPhone),
+                url: "/smartphones",
+                success: successHandler
+            })
+            event.preventDefault();
+        }
+
+        function deletePhone(a) {
+            let id = a.getAttribute("value");
+            $.ajax({
+                type: "DELETE",
+                url: "/smartphones/" + id,
+                success: function () {
+                    a.parentElement.parentElement.remove();
+                }
+            })
+            event.preventDefault();
+        }
+        function editPhone(a) {
+            let id = a.getAttribute("value");
+            $('#editPhone').show()
+            $.ajax({
+                type: "GET",
+                url:"/smartphones/" + id,
+                success : function (smartphone) {
+                    $('#idEdit').val(smartphone.id);
+                    $('#producerEdit').val(smartphone.producer);
+                    $('#modelEdit').val(smartphone.model);
+                    $('#priceEdit').val(smartphone.price);
+
+                }
+            })
+            event.preventDefault();
+        }
+
+        function updatePhone() {
+            let id = $('#idEdit').val();
+            let producer = $('#producerEdit').val();
+            let model = $('#modelEdit').val();
+            let price = $('#priceEdit').val();
+            let newPhone = {
+                id : id ,
+                producer : producer,
+                model : model,
+                price : price
+            };
+            $.ajax({
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                type: "PUT",
+                data: JSON.stringify(newPhone),
+                url: "/smartphones",
+                success : successHandler
+            })
+            event.preventDefault();
+        }
+    </script>
+</head>
+<body>
+<form id="add-smartphone">
+    <table>
+        <tr>
+            <td>Producer:</td>
+            <td><input type="text" id="producer" placeholder="producer"></td>
+        </tr>
+        <tr>
+            <td>Model:</td>
+            <td><input type="text" id="model" placeholder="model"></td>
+        </tr>
+        <tr>
+            <td>Price:</td>
+            <td><input type="text" id="price" placeholder="price"></td>
+        </tr>
+        <tr>
+            <td></td>
+            <td><input type="submit" value="Create" onclick="addNewPhone()"></td>
+        </tr>
+    </table>
+</form>
+<h1>Smartphone List</h1>
+<table id="smartphoneList" border="5px">
+    <tr>
+        <td>Producer</td>
+        <td>Model</td>
+        <td>Price</td>
+        <td>Delete</td>
+        <td>Edit</td>
+    </tr>
+    <th:block th:each="smartphone: ${smartphones}">
+        <tr>
+            <td th:text="${smartphone.producer}"></td>
+            <td th:text="${smartphone.model}"></td>
+            <td th:text="${smartphone.price}"></td>
+            <td>
+                <button type="submit" th:value="${smartphone.id}" onclick="deletePhone(this)">Delete</button>
+            </td>
+            <td>
+                <button type="submit" th:value="${smartphone.id}" onclick="editPhone(this)">Edit</button>
+            </td>
+        </tr>
+    </th:block>
+</table>
+<form id="editPhone">
+    <table>
+        <tr>
+            <td></td>
+            <td><input type="hidden" id="idEdit"></td>
+        </tr>
+        <tr>
+            <td>Producer:</td>
+            <td><input type="text" id="producerEdit" placeholder="producer"></td>
+        </tr>
+        <tr>
+            <td>Model:</td>
+            <td><input type="text" id="modelEdit" placeholder="model"></td>
+        </tr>
+        <tr>
+            <td>Price:</td>
+            <td><input type="text" id="priceEdit" placeholder="price"></td>
+        </tr>
+        <tr>
+            <td></td>
+            <td><input type="submit" value="Update" onclick="updatePhone()"></td>
+        </tr>
+    </table>
+</form>
+</body>
+</html>
